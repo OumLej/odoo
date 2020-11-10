@@ -1414,12 +1414,8 @@ class MrpProduction(models.Model):
                         new_moves_vals.append(move_vals[0])
                 new_moves = self.env['stock.move'].create(new_moves_vals)
             backorders |= backorder_mo
-            for wo in backorder_mo.workorder_ids:
-                wo.qty_produced = 0
-                if wo.product_tracking == 'serial':
-                    wo.qty_producing = 1
-                else:
-                    wo.qty_producing = wo.qty_remaining
+            for old_wo, wo in zip(production.workorder_ids, backorder_mo.workorder_ids):
+                wo.qty_produced = max(old_wo.qty_produced - old_wo.qty_producing, 0)
 
             production.name = self._get_name_backorder(production.name, production.backorder_sequence)
 
